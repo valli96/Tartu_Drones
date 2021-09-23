@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(pack_lab3)
+project(pack_lab4)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,6 +8,7 @@ project(pack_lab3)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  nav_msgs
   geometry_msgs
   rospy
   std_msgs
@@ -109,23 +110,11 @@ catkin_package(
 #  CATKIN_DEPENDS geometry_msgs rospy std_msgs
 #  DEPENDS system_lib
 )
-catkin_install_python(PROGRAMS src/circle_turtlebot.py
+
+catkin_install_python(PROGRAMS src/move_mode.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
-catkin_install_python(PROGRAMS src/object_avoidance.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-catkin_install_python(PROGRAMS src/circle_turtlesim.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-catkin_install_python(PROGRAMS src/sub_test_node.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-catkin_install_python(PROGRAMS src/object_avoidance_test.py
+catkin_install_python(PROGRAMS src/test_A_to_B.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 ###########
