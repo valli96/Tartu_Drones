@@ -4,9 +4,9 @@ from tf.transformations import euler_from_quaternion
 from geometry_msgs.msg import Pose, Twist, Point
 import math
 
-
-kpv = 1
-kpav = 1.2
+# tuning parameters
+kpv = 0.5
+kpav = 1
 
 # pub velocity for turtlebot
 rospy.init_node("speed_controller")
@@ -39,8 +39,6 @@ def dist(x, y):
 def callback(msg):
     # global x, y, theta, goal
     global goal
-    # goal.x = 8
-    # goal.y = -3
     speed = Twist()
     x = msg.pose.pose.position.x
     y = msg.pose.pose.position.y
@@ -49,36 +47,28 @@ def callback(msg):
         [rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
     inc_x, inc_y, distance = dist(x, y)
-    # print(inc_x, "inc_x")
-    # print(inc_y, "inc_y")
     angle_to_goal = math.atan2(inc_y, inc_x)
-    print(angle_to_goal, "angle to the goal")
-    print(theta, "theta")
     diff_ang = diff_angels(angle_to_goal, theta)
-    print(diff_ang, "diff_ang")
+    # print(angle_to_goal, "angle to the goal")
+    # print(theta, "theta")
+    # print(diff_ang, "diff_ang")
+    # print(angle_to_goal-theta, "angle_to_goal-theta")
     if distance > 0.2:
-        if abs(angle_to_goal - theta) > 0.4:
-            if (angle_to_goal - theta) > 0:
+        if abs(-diff_ang) > 0.4:
+            if (-diff_ang) > 0:
                 speed.linear.x = 0.0
-                speed.angular.z = 0.3*abs(angle_to_goal-theta) * \
+                speed.angular.z = 0.3*abs(diff_ang) * \
                     kpav  # counter clockwise
                 print("I move counter clockwise with: ", speed.angular.z)
-            if (angle_to_goal - theta) < 0:
+            if (-diff_ang) < 0:
                 speed.linear.x = 0.0
                 speed.angular.z = -0.3 * \
-                    abs(angle_to_goal-theta)*kpav  # clockwise
+                    abs(diff_ang)*kpav  # clockwise
                 print("I move clockwise", speed.angular.z)
         else:
             speed.linear.x = 0.5*distance*kpv
             speed.angular.z = 0.0
-    # else:
-    # speed.linear.x = 0.0
-    # speed.angular.z = 0.1
-    # print(theta)
-    # print(speed.linear.x, "linear")
-    # print(theta, "real angle")
-    # print(angle_to_goal, "angle to the goal")
-    # print(angle_to_goal-theta, "differnece")
+
     pub.publish(speed)
 
 
@@ -93,12 +83,9 @@ def get_goal_point(msg):
 
 def main():
 
-    # global goal, theta
     imput_points()
-    # goal = Point()
     sub_inital = rospy.Subscriber(
         "/turtlebot/goal_pose", Pose, get_goal_point, queue_size=1)
-    # imput_points()
     sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)
     rospy.spin()
 
