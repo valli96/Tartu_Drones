@@ -1,50 +1,124 @@
+#!/usr/bin/env python3
+
 from geometry_msgs.msg import Pose, Twist, Point
 from tf.transformations import euler_from_quaternion
 from nav_msgs.msg import Odometry
 import math
 import time
 import rospy
-import PID_controller_class
+# import PID_controller_class
 
-# import sys
-# sys.path.append(".")
+
+class PID_controller:
+    def __init__(self, kp_v, kp_av, ki_v, ki_av, kd_v, kd_av):
+
+        self._kp_v = kp_v
+        self._kp_av = kp_av
+        self._ki_v = ki_v
+        self._ki_av = ki_av
+        self._kd_v = kd_v
+        self._kd_av = kd_av
+
+        self._ki_v_min = ki_v
+        self._ki_av_min = ki_av
+        self._ki_v_max = ki_v
+        self._ki_av_max = ki_av
+
+        self._last_time = None
+        self.dt = None
+        self._linear_error_last = None
+        self._angular_error_last = None
+
+    def calcualte_time_loop(self):
+        """
+        start loop timing and calculate the time of one loop
+        first_loop -> dt = 0
+        """
+        actual_time = time.time()
+
+        if self._last_time == None:
+            self._last_time = actual_time
+
+        self.dt = actual_time - self._last_time
+        self._last_time = actual_time
+
+    def update_PID_contoller(self, linear_error, angular_error):
+        """
+        linear_error:= x and y difference between actual position and goal position
+        angular_error:= angular difference between actual angel and the angel to the goal
+
+        The actual implementation  of the PID controller.
+
+        """
+        print("linear_error",linear_error)
+        print("angular_error",angular_error)
+
+        self.calcualte_time_loop()
+        if self.dt == 0:
+            self._angular_controler = 0
+            self._linear_controler = 0
+            return self._angular_controler, self._linear_controler
+
+        # P controller part
+        linear_velocity_p = self._kp_v * linear_error
+        angular_velocity_p = self._kp_av * angular_error
+
+        if(self._linear_error_last == None):
+            self._linear_error_last = linear_error
+        if(self._angular_error_last == None):
+            self._angular_error_last = angular_error
+
+        # D controller part
+        linear_velocity_d = self._kd_v * \
+            (self._linear_error_last - linear_error)/self.dt
+        angular_velocity_d = self._kd_av * \
+            (self._linear_error_last - linear_error)/self.dt
+
+        # linear_velocity_i += self.dt*self._kp_v
+
+        self._linear_error_last = linear_error
+        self._angular_error_last = angular_error
+
+        # self._linear_controler = linear_velocity_p + linear_velocity_d
+        # self._angular_controler = angular_velocity_p + angular_velocity_d
+        
+        self._linear_controler = abs(linear_velocity_p)
+        self._angular_controler = angular_velocity_p
+
+        # limits speed
+        if self._linear_controler >= 0.5:
+            self._linear_controler = 0.5
+        
+        # if abs(self._angular_controler) >= 0.5:
+        #     if self._angular_controler >= 0.5:
+        #         self._angular_controler = 0.5
+        #     if self._angular_controler >= -0.5:
+        #         self._angular_controler = -0.5
+     
+         
+        
+        print("published speed",self._linear_controler )
+        print("published angular speed",self._angular_controler )
+
 
 
 # tuning parameters
 kp_v = 0.5
-kp_av = 1
+kp_av = 0.2
 
 ki_v = 0.5
-ki_av = 1
+ki_av = 0.02
 
 kd_v = 0.5
-kd_av = 1
+kd_av = 0.002
 
-
-controller = PID_controller_class.PID_controller(
-    kp_v, kp_av, ki_v, ki_av, kd_v, kd_av)
 # pub velocity for turtlebot
 rospy.init_node("speed_controller")
 pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
 
 
-# def PID_controller(distance_to_goal, diff_ang):
-#     # time
-#     cur_time = time.time()
-#     time_diff = cur_time-last_time
-
-#     # proportional part
-#     pro_vel = distance_to_goal*kp_v
-#     pro_velang = abs(diff_angels)*kp_av
-#     # integrative part
-#     int_vel = (int_vel - distance_to_goal)*time_diff*ki_v
-#     int_velang = (int_velang - abs(diff_angels))*time_diff*ki_av
-#     # differential part
-#     dif_vel = (dif_vel - distance_to_goal)/time_diff*kd_v
-#     dif_velang = (dif_velanf - abs(diff_ang))/time_diff*kd_av
-
-#     last_time = cur_time
-#     return pro_vel, pro_velang, int_vel, int_velang, dif_vel, dif_velang
+PID_class = PID_controller(
+    kp_v, kp_av, ki_v, ki_av, kd_v, kd_av)
 
 
 def imput_points():
@@ -92,27 +166,20 @@ def callback(msg):
     diff_ang = diff_angels(angle_to_goal, theta)
 
     if distance_to_goal > 0.2:
-        controller = update_PID_contoller(distance_to_goal, diff_ang)
-        # if abs(-diff_ang) > 0.4:
-        #     if (-diff_ang) > 0:
-        #         speed.linear.x = 0.0
-        #         speed.angular.z = 0.3*abs(diff_ang) * \
-        #             kpav  # counter clockwise
-        #         print("I move counter clockwise with: ", speed.angular.z)
-        #     if (-diff_ang) < 0:
-        #         speed.linear.x = 0.0
-        #         speed.angular.z = -0.3 * \
-        #             abs(diff_ang)*kpav  # clockwise
-        #         print("I move clockwise", speed.angular.z)
-        # else:
-        #     speed.linear.x = 0.5*distance_to_goal*kpv
-        #     speed.angular.z = 0.0
-
+        PID_class.update_PID_contoller(
+            distance_to_goal, diff_ang)
+    
+    # speed.linear.x = PID_class._linear_controler
+    speed.angular.z = PID_class._angular_controler
+    # speed.angular.z = 0
+    print("distance to goal", distance_to_goal)
+    print("angle to goal", diff_ang)
     pub.publish(speed)
-
+ 
 
 def main():
     imput_points()
+    
     sub_inital = rospy.Subscriber(
         "/turtlebot/goal_pose", Pose, get_goal_point, queue_size=1)
     sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)

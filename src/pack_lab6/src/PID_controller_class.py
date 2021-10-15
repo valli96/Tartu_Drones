@@ -2,11 +2,11 @@ import math
 import time
 
 
-def Hallo():
-    print("Hallo")
+def fun_hello():
+    print("hallo")
 
 
-class PID_controller(object):
+class PID_controller:
     def __init__(self, kp_v, kp_av, ki_v, ki_av, kd_v, kd_av):
 
         self._kp_v = kp_v
