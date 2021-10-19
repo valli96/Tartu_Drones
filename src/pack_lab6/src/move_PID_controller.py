@@ -50,8 +50,6 @@ class PID_controller:
         The actual implementation  of the PID controller.
 
         """
-        print("linear_error",linear_error)
-        print("angular_error",angular_error)
 
         self.calcualte_time_loop()
         if self.dt == 0:
@@ -79,38 +77,29 @@ class PID_controller:
         self._linear_error_last = linear_error
         self._angular_error_last = angular_error
 
-        # self._linear_controler = linear_velocity_p + linear_velocity_d
-        # self._angular_controler = angular_velocity_p + angular_velocity_d
-        
-        self._linear_controler = abs(linear_velocity_p)
-        self._angular_controler = angular_velocity_p
+        print(linear_velocity_p, "linear_velocity_p")
+        print(linear_velocity_d, "linear_velocity_d")
+
+        print(angular_velocity_p, "angular_velocity_p")
+        print(angular_velocity_d, "angular_velocity_d")
+
+        self._linear_controler = linear_velocity_p + linear_velocity_d
+        self._angular_controler = angular_velocity_p + angular_velocity_d
 
         # limits speed
-        if self._linear_controler >= 0.5:
+        if abs(self._linear_controler) >= 0.5:  # should not be negative
             self._linear_controler = 0.5
-        
-        # if abs(self._angular_controler) >= 0.5:
-        #     if self._angular_controler >= 0.5:
-        #         self._angular_controler = 0.5
-        #     if self._angular_controler >= -0.5:
-        #         self._angular_controler = -0.5
-     
-         
-        
-        print("published speed",self._linear_controler )
-        print("published angular speed",self._angular_controler )
-
 
 
 # tuning parameters
-kp_v = 0.5
-kp_av = 0.2
+kp_v = 0.2
+kp_av = 0.7
 
 ki_v = 0.5
 ki_av = 0.02
 
 kd_v = 0.5
-kd_av = 0.002
+kd_av = 0.2
 
 # pub velocity for turtlebot
 rospy.init_node("speed_controller")
@@ -163,23 +152,22 @@ def callback(msg):
 
     inc_x, inc_y, distance_to_goal = dist(x, y)
     angle_to_goal = math.atan2(inc_y, inc_x)
-    diff_ang = diff_angels(angle_to_goal, theta)
+    diff_ang = -diff_angels(angle_to_goal, theta)
 
     if distance_to_goal > 0.2:
         PID_class.update_PID_contoller(
             distance_to_goal, diff_ang)
-    
-    # speed.linear.x = PID_class._linear_controler
+
+    speed.linear.x = PID_class._linear_controler
     speed.angular.z = PID_class._angular_controler
     # speed.angular.z = 0
-    print("distance to goal", distance_to_goal)
-    print("angle to goal", diff_ang)
+
     pub.publish(speed)
- 
+
 
 def main():
     imput_points()
-    
+
     sub_inital = rospy.Subscriber(
         "/turtlebot/goal_pose", Pose, get_goal_point, queue_size=1)
     sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)

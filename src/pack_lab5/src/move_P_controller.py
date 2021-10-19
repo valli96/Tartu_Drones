@@ -55,20 +55,22 @@ def callback(msg):
     # print(angle_to_goal-theta, "angle_to_goal-theta")
     if distance > 0.2:
         if abs(-diff_ang) > 0.4:
-            if (-diff_ang) > 0:
+            if (diff_ang) > 0:
                 speed.linear.x = 0.0
-                speed.angular.z = 0.3*abs(diff_ang) * \
+                speed.angular.z = -0.3*abs(diff_ang) * \
                     kpav  # counter clockwise
                 print("I move counter clockwise with: ", speed.angular.z)
-            if (-diff_ang) < 0:
-                speed.linear.x = 0.0
-                speed.angular.z = -0.3 * \
+            if (diff_ang) < 0:
+                speed.linear.x = 0
+                speed.angular.z = 0.3 * \
                     abs(diff_ang)*kpav  # clockwise
                 print("I move clockwise", speed.angular.z)
         else:
             speed.linear.x = 0.5*distance*kpv
             speed.angular.z = 0.0
+        print(diff_ang)
 
+    # speed.linear.x = 0
     pub.publish(speed)
 
 
