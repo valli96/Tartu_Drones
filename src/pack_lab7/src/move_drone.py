@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+from geometry_msgs.msg import Pose, Twist, Point
+from std_msgs.msg import Empty
+# from tf.transformations import euler_from_quaternion
+# from nav_msgs.msg import Odometry
+import math
+import time
+import rospy
+# import PID_controller_class
+
+
+# pub velocity for turtlebot
+# pub_twist = rospy.Publisher("cmd_vel", Twist, queue_size=1)
+
+
+# def callback(msg):
+#     speed = Twist()
+#     x = msg.pose.pose.position.x
+#     y = msg.pose.pose.position.y
+#     rot_q = msg.pose.pose.orientation
+#     speed.linear.x = 1
+#     speed.angular.z = 2
+#     pub.publish(speed)
+
+rospy.init_node("drone_control")
+pub_takeoff = rospy.Publisher("drone/takeoff", Empty, queue_size=1)
+pub_land = rospy.Publisher("/drone/land", Empty, queue_size=1)
+hey = Empty()
+
+
+def main():
+    time.sleep(0.5)
+    pub_takeoff.publish(hey)
+    time.sleep(4)
+    pub_land.publish(hey)
+    # sub_inital = rospy.Subscriber(
+    #     "/turtlebot/goal_pose", Pose, get_goal_point, queue_size=1)
+    # sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)
+    # rospy.spin()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
