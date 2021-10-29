@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/valenitn/catkin_python/Tartu_Drones/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/valenitn/catkin_python/Tartu_Drones/src/sjtu-drone/include/**",
+        "/home/valenitn/catkin_python/Tartu_Drones/src/turtlebot3_simulations/turtlebot3_fake/include/**",
+        "/home/valenitn/catkin_python/Tartu_Drones/src/turtlebot3_simulations/turtlebot3_gazebo/include/**",
+        "/home/valenitn/catkin_python/Tartu_Drones/src/turtlebot3/turtlebot3_slam/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
