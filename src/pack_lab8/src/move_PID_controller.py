@@ -3,6 +3,7 @@
 from geometry_msgs.msg import Pose, Twist, Point
 from tf.transformations import euler_from_quaternion
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Empty
 import math
 import time
 import rospy
@@ -10,7 +11,9 @@ import rospy
 
 
 class PID_controller:
-    def __init__(self, kp_v_x,  kp_v_y, kp_v_z, kp_av, ki_v_x, ki_v_y, ki_v_z, ki_av, kd_v_x, kd_v_y, kd_v_z, kd_av, ki_v_x_min, ki_v_y_min, ki_v_z_min, ki_av_min, ki_v_x_max, ki_v_y_max, ki_v_z_max, ki_av_max):
+    def __init__(self, kp_v_x,  kp_v_y, kp_v_z, kp_av, ki_v_x, ki_v_y, ki_v_z, ki_av, kd_v_x,
+                 kd_v_y, kd_v_z, kd_av, ki_v_x_min, ki_v_y_min, ki_v_z_min, ki_av_min,
+                 ki_v_x_max, ki_v_y_max, ki_v_z_max, ki_av_max):
 
         self._kp_v_x = kp_v_x
         self._kp_v_y = kp_v_y
@@ -39,9 +42,9 @@ class PID_controller:
 
         self.dt = None
         self._last_time = None
-        self._linear_error_last_x = None
-        self._linear_error_last_y = None
-        self._linear_error_last_z = None
+        self._linear_error_x_last = None
+        self._linear_error_y_last = None
+        self._linear_error_z_last = None
         self._angular_error_last = None
 
     def calcualte_time_loop(self):
@@ -65,14 +68,13 @@ class PID_controller:
         The actual implementation  of the PID controller.
 
         """
-
         self.calcualte_time_loop()
         if self.dt == 0:
             self._linear_controler_x = 0
             self._linear_controler_y = 0
             self._linear_controler_z = 0
             self._angular_controler = 0
-            return self._linear_controler, self._angular_controler,
+            return self._linear_controler_x, self._linear_controler_y, self._linear_controler_z, self._angular_controler,
 
         # P controller part
         linear_velocity_p_x = self._kp_v_x * linear_error_x
@@ -108,21 +110,24 @@ class PID_controller:
         self._linear_error_z_last = linear_error_z
         self._angular_error_last = angular_error
 
-        print(linear_velocity_p_x, "linear_velocity_p")
-        print(linear_velocity_d_x, "linear_velocity_d")
-        print(linear_velocity_p_y, "linear_velocity_p")
-        print(linear_velocity_d_y, "linear_velocity_d")
-        print(linear_velocity_p_z, "linear_velocity_p")
-        print(linear_velocity_d_z, "linear_velocity_d")
+        # print(linear_velocity_p_x, "linear_velocity_p")
+        # print(linear_velocity_d_x, "linear_velocity_d")
+        # print(linear_velocity_p_y, "linear_velocity_p")
+        # print(linear_velocity_d_y, "linear_velocity_d")
+        # print(linear_velocity_p_z, "linear_velocity_p")
+        # print(linear_velocity_d_z, "linear_velocity_d")
 
-        print(angular_velocity_p, "angular_velocity_p")
-        print(angular_velocity_d, "angular_velocity_d")
+        # print(angular_velocity_p, "angular_velocity_p")
+        # print(angular_velocity_d, "angular_velocity_d")
 
         self._linear_controler_x = linear_velocity_p_x + linear_velocity_d_x
         self._linear_controler_y = linear_velocity_p_y + linear_velocity_d_y
         self._linear_controler_z = linear_velocity_p_z + linear_velocity_d_z
         self._angular_controler = angular_velocity_p + angular_velocity_d
 
+        print(self._linear_controler_x, "_linear_controler_x")  # 0.0
+        print(self._linear_controler_y, "_linear_controler_y")  # 0.4
+        print(self._linear_controler_z, "_linear_controler_z")  # 0.4
         # limits speed
         if abs(self._linear_controler_x) >= 0.5:  # should not be negative
             self._linear_controler_x = 0.5
@@ -159,12 +164,16 @@ ki_v_z_max = 0.7
 ki_av_max = 0.7
 
 # pub velocity for turtlebot
+Empty_ = Empty()
 rospy.init_node("speed_controller")
-pub = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
-
+pub_takeoff = rospy.Publisher("drone/takeoff", Empty, queue_size=1)
+pub_move = rospy.Publisher("/cmd_vel", Twist, queue_size=1)
+# pub_land = rospy.Publisher("/drone/land", Empty, queue_size=1)
 
 PID_class = PID_controller(
-    kp_v_x, kp_v_z, kp_v_z, kp_av, ki_v_x, ki_v_y, ki_v_z, ki_av, kd_v_x, kd_v_y, kd_v_z,  kd_av)
+    kp_v_x,  kp_v_y, kp_v_z, kp_av, ki_v_x, ki_v_y, ki_v_z, ki_av, kd_v_x,
+    kd_v_y, kd_v_z, kd_av, ki_v_x_min, ki_v_y_min, ki_v_z_min, ki_av_min,
+    ki_v_x_max, ki_v_y_max, ki_v_z_max, ki_av_max)
 
 
 def imput_points():
@@ -212,25 +221,32 @@ def callback(msg):
         [rot_q.x, rot_q.y, rot_q.z, rot_q.w])
 
     inc_x, inc_y, inc_z, distance_to_goal = dist(x, y, z)
-    angle_to_goal = math.atan2(inc_y, inc_x, inc_z)
+    angle_to_goal = math.atan2(inc_y, inc_x)
     diff_ang = -diff_angels(angle_to_goal, theta)
+    print("inc_x", inc_x)
+    print("inc_y", inc_y)
+    print("inc_z", inc_z)
 
     if distance_to_goal > 0.2:
-        PID_class.update_PID_contoller(
-            distance_to_goal, diff_ang)
+        PID_class.update_PID_contoller(inc_x, inc_y, inc_z, diff_ang)
 
     speed.linear.x = PID_class._linear_controler_x
     speed.linear.y = PID_class._linear_controler_y
     speed.linear.z = PID_class._linear_controler_z
-    speed.angular.z = PID_class._angular_controler
-    # speed.angular.z = 0
+    # speed.angular.z = PID_class._angular_controler
+    speed.angular.z = 0
 
-    pub.publish(speed)
+    pub_move.publish(speed)
+
+
+def myhook():
+    print "shutdown time!"
 
 
 def main():
     imput_points()
-
+    time.sleep(1.5)
+    pub_takeoff.publish(Empty_)
     sub_inital = rospy.Subscriber(
         "/drone/goal_pose", Pose, get_goal_point, queue_size=1)
     sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)
@@ -241,4 +257,8 @@ if __name__ == '__main__':
     try:
         main()
     except rospy.ROSInterruptException:
+        speed.linear.x = 0
+        speed.linearrx = 0
+        speed.linear.x = 0
+        pub_move.publish(speed)
         pass
