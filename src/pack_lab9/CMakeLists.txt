@@ -1,6 +1,6 @@
 
 cmake_minimum_required(VERSION 2.8.3)
-project(pack_lab8)
+project(pack_lab9)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   sensor_msgs
+  # ar_track_alvar_msgs
+  visualization_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -112,7 +114,7 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-catkin_install_python(PROGRAMS src/move_PID_controller.py 
+catkin_install_python(PROGRAMS src/pub_pos_marker.py 
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 # catkin_install_python(PROGRAMS src/

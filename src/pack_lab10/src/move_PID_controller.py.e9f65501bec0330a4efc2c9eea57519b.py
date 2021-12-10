@@ -271,6 +271,8 @@ def main():
     pub_takeoff.publish(Empty_)
     sub_inital = rospy.Subscriber(
         "/drone/goal_pose", Pose, get_goal_point, queue_size=1)
+    sub_inital = rospy.Subscriber(
+        "/drone/goal_pose", Pose, get_goal_point, queue_size=1)
     # sub = rospy.Subscriber("/odom", Odometry, callback, queue_size=1)
     sub = rospy.Subscriber("/drone/gt_pose", Pose, callback, queue_size=1)
     print("hallo:")
