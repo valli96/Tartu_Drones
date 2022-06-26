@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "../../../00_Nextcloud/01_education/00_Tartu/State_Estimation/homework"
+		}
+	],
+	"settings": {
+		"ros.distro": "noetic",
+		"python.autoComplete.extraPaths": [
+			"/home/valenitn/catkin_python/Tartu_Drones/devel/lib/python3/dist-packages",
+			"/opt/ros/noetic/lib/python3/dist-packages"
+		],
+		"python.analysis.extraPaths": [
+			"/home/valenitn/catkin_python/Tartu_Drones/devel/lib/python3/dist-packages",
+			"/opt/ros/noetic/lib/python3/dist-packages"
+		]
+	}
+}
